@@ -1,19 +1,23 @@
 from connectors import MySQLConnector, MongoConnector, CassandraConnector
 
 
-def mysql_to_mongodb(db, mysql_config, mongodb_config):
-    mysql = MySQLConnector(mysql_config).use("task-manager")
-    mongodb = MongoConnector(mongodb_config).create("task-manager")
+def mysql_to_mongodb(schema_name: str, mysql_config: dict, mongodb_config: dict) -> None:
+    """This procedure handles database migration from mysql to mongodb.
+    @param {string} schema_name - The schema to migrate from and to.
+    @param {dictionary} mysql_config - The connection configuration of mysql.
+    @param {dictionary} mongodb_config - The connection configuration of mongodb."""
+    mysql = MySQLConnector(mysql_config).use(schema_name)
+    mongodb = MongoConnector(mongodb_config).create(schema_name)
 
-    for table_name in mysql.get_tables_names():
-        collection = mysql.get_collection(table_name)
+    for table_name in mysql.get_tables_name():
+        table = mysql.get_table(table_name)
 
-        mongodb.insert_many(table_name, collection)
+        mongodb.insert_many(table_name, table)
         print(f"Migration of table {table_name} is done!")
 
     mongodb.apply_foreign_keys(mysql.get_foreign_keys())
     mongodb.remove_primary_keys(mysql.get_primary_keys())
-    print(f"Migration of database {db} is done!")
+    print(f"Migration of database {schema_name} is done!")
 
     del mysql
     del mongodb
