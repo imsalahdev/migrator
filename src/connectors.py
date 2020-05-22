@@ -108,6 +108,8 @@ class MySQLConnector:
                     record[field] = (result[i] == 1)
                 elif type.startswith("longblob"):
                     record[field] = base64.encodebytes(result[i])
+                elif type.startswith("date"):
+                    record[field] = str(result[i])
                 else:
                     record[field] = result[i]
             table.append(record)
@@ -133,9 +135,11 @@ class MongoConnector:
         """This method selects the database to use.
         @param {string} db_name - The database name to select.
         @return {MongoConnector} - Returns the current object."""
-
-        self.db = self.client[db_name]
-        return self
+        if self.db_exists(db_name):
+            self.db = self.client[db_name]
+            return self
+        else:
+            raise Exception(f"1049 (42000): Unknown database '{db_name}'")
 
     def create(self, db_name: str) -> "MongoConnector":
         """This method creates a new database if it already existed.
@@ -144,7 +148,8 @@ class MongoConnector:
 
         if self.db_exists(db_name):
             db_name += f"_{uuid4().hex[:8]}"
-        return self.use(db_name)
+        self.db = self.client[db_name]
+        return self
 
     def db_exists(self, db_name: str) -> bool:
         """This method checks if a database's already existing.
@@ -153,29 +158,34 @@ class MongoConnector:
 
         return db_name in self.client.list_database_names()
 
-    def insert_many(self, table_name: str, table: list) -> None:
+    def insert_many(self, table_name: str, table: list) -> bool:
         """This method inserts values into the specified collection.
         @param {string} table_name - The table name.
-        @param {list} table - The table values."""
+        @param {list} table - The table values.
+        @return {boolean} - Returns if insertion has completed successfully."""
 
-        self.db[table_name].insert_many(table)
+        if len(table) != 0:
+            self.db[table_name].insert_many(table)
+            return True
+        return False
 
     def apply_foreign_keys(self, foreign_keys: list) -> None:
         """This method apply foreign keys relationships.
         @param {list} foreign_keys - A list of foreign keys names."""
-
         for (table_name, column_name, referenced_table_name, referenced_column_name) in foreign_keys:
             for doc in self.db[table_name].find():
-                self.db[table_name].update({
-                    column_name: doc[column_name]
-                }, {
-                    "$set": {
-                        column_name: self.db[referenced_table_name].find_one(
-                            {
-                                referenced_column_name: doc[column_name]
-                            })["_id"]
-                    }
+                referenced_table = self.db[referenced_table_name].find_one({
+                    referenced_column_name: doc[column_name]
                 })
+
+                if referenced_table != None:
+                    self.db[table_name].update({
+                        column_name: doc[column_name]
+                    }, {
+                        "$set": {
+                            column_name: referenced_table["_id"]
+                        }
+                    })
 
         self.rename_fields_from_foreign_keys(foreign_keys)
 
