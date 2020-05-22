@@ -23,17 +23,21 @@ def mysql_to_mongodb(schema_name: str, mysql_config: dict, mongodb_config: dict)
     del mongodb
 
 
-def mongodb_to_cassandra(db, mongodb_config, cassandra_config):
-    mongodb = MongoConnector(mongodb_config).use("task-manager")
-    cassandra = CassandraConnector(cassandra_config).create("task-manager")
+def mongodb_to_cassandra(schema_name: str, mongodb_config: dict, cassandra_config: dict) -> None:
+    """This procedure handles database migration from mongodb to cassandra.
+    @param {string} schema_name - The schema to migrate from and to.
+    @param {dictionary} mongodb_config - The connection configuration of mongodb.
+    @param {dictionary} cassandra_config - The connection configuration of cassandra."""
+    mongodb = MongoConnector(mongodb_config).use(schema_name)
+    cassandra = CassandraConnector(cassandra_config).create(schema_name)
 
-    for table_name in mongodb.get_tables_names():
-        collection = mongodb.get_collection(table_name)
+    for collection_name in mongodb.get_collection_names():
+        collection = mongodb.get_collection(collection_name)
 
-        cassandra.insert_many(table_name, collection)
-        print(f"Migration of table {table_name} is done!")
+        cassandra.insert_many(collection_name, collection)
+        print(f"Migration of table {collection_name} is done!")
 
-    print(f"Migration of database {db} is done!")
+    print(f"Migration of database {schema_name} is done!")
 
     del mongodb
     del cassandra
