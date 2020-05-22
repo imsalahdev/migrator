@@ -313,8 +313,6 @@ class CassandraConnector:
                     types.append("id text PRIMARY KEY")
                 else:
                     types.append(f"{field_name} text")
-            elif field_type == str:
-                types.append(f"{field_name} text")
             elif field_type == int:
                 types.append(f"{field_name} int")
             elif field_type == float:
@@ -323,6 +321,8 @@ class CassandraConnector:
                 types.append(f"{field_name} boolean")
             elif field_type == bytes:
                 types.append(f"{field_name} blob")
+            else:
+                types.append(f"{field_name} text")
 
         types_str = ", ".join(types)
         self.session.execute(f"CREATE TABLE {collection_name} ({types_str})")
