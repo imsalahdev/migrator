@@ -6,6 +6,7 @@ def mysql_to_mongodb(schema_name: str, mysql_config: dict, mongodb_config: dict)
     @param {string} schema_name - The schema to migrate from and to.
     @param {dictionary} mysql_config - The connection configuration of mysql.
     @param {dictionary} mongodb_config - The connection configuration of mongodb."""
+
     mysql = MySQLConnector(mysql_config).use(schema_name)
     mongodb = MongoConnector(mongodb_config).create(schema_name)
 
@@ -28,6 +29,7 @@ def mongodb_to_cassandra(schema_name: str, mongodb_config: dict, cassandra_confi
     @param {string} schema_name - The schema to migrate from and to.
     @param {dictionary} mongodb_config - The connection configuration of mongodb.
     @param {dictionary} cassandra_config - The connection configuration of cassandra."""
+    
     mongodb = MongoConnector(mongodb_config).use(schema_name)
     cassandra = CassandraConnector(cassandra_config).create(schema_name)
 
