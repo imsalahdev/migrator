@@ -136,6 +136,7 @@ class MongoConnector:
         @param {string} db_name - The database name to select.
         @return {MongoConnector} - Returns the current object."""
         if self.db_exists(db_name):
+            self.db_name = db_name
             self.db = self.client[db_name]
             return self
         else:
@@ -148,6 +149,7 @@ class MongoConnector:
 
         if self.db_exists(db_name):
             db_name += f"_{uuid4().hex[:8]}"
+        self.db_name = db_name
         self.db = self.client[db_name]
         return self
 
