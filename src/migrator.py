@@ -2,7 +2,9 @@ from connectors import MySQLConnector, MongoConnector, CassandraConnector
 from utils import colorify, Fore
 
 
-def mysql_to_mongodb(schema_name: str, mysql_config: dict, mongodb_config: dict) -> None:
+def mysql_to_mongodb(
+    schema_name: str, mysql_config: dict, mongodb_config: dict
+) -> None:
     """This procedure handles database migration from mysql to mongodb.
     @param {string} schema_name - The schema to migrate from and to.
     @param {dictionary} mysql_config - The connection configuration of mysql.
@@ -13,9 +15,12 @@ def mysql_to_mongodb(schema_name: str, mysql_config: dict, mongodb_config: dict)
         mongodb = MongoConnector(mongodb_config).create(schema_name)
 
         print(
-            f"Migration {colorify(Fore.MAGENTA, '{MySQL => MongoDB}')} of {colorify(Fore.YELLOW, f'`{schema_name}`')} started:")
+            f"Migration {colorify(Fore.MAGENTA, '{MySQL => MongoDB}')} of {colorify(Fore.YELLOW, f'`{schema_name}`')} started:"
+        )
         print(
-            " " * 5 + f"Generated schema name => {colorify(Fore.CYAN, f'`{mongodb.db_name}`')}")
+            " " * 5
+            + f"Generated schema name => {colorify(Fore.CYAN, f'`{mongodb.db_name}`')}"
+        )
         for table_name in mysql.get_tables_name():
             table = mysql.get_table(table_name)
             if mongodb.insert_many(table_name, table):
@@ -25,8 +30,7 @@ def mysql_to_mongodb(schema_name: str, mysql_config: dict, mongodb_config: dict)
 
         mongodb.apply_foreign_keys(mysql.get_foreign_keys())
         mongodb.remove_primary_keys(mysql.get_primary_keys())
-        print(
-            f"Migration {colorify(Fore.MAGENTA, '{MySQL => MongoDB}')} finished!")
+        print(f"Migration {colorify(Fore.MAGENTA, '{MySQL => MongoDB}')} finished!")
 
         del mysql
         del mongodb
@@ -34,7 +38,9 @@ def mysql_to_mongodb(schema_name: str, mysql_config: dict, mongodb_config: dict)
         print(f"Error: {str(e)}")
 
 
-def mongodb_to_cassandra(schema_name: str, mongodb_config: dict, cassandra_config: dict) -> None:
+def mongodb_to_cassandra(
+    schema_name: str, mongodb_config: dict, cassandra_config: dict
+) -> None:
     """This procedure handles database migration from mongodb to cassandra.
     @param {string} schema_name - The schema to migrate from and to.
     @param {dictionary} mongodb_config - The connection configuration of mongodb.
@@ -44,17 +50,19 @@ def mongodb_to_cassandra(schema_name: str, mongodb_config: dict, cassandra_confi
         mongodb = MongoConnector(mongodb_config).use(schema_name)
         cassandra = CassandraConnector(cassandra_config).create(schema_name)
         print(
-            f"Migration {colorify(Fore.MAGENTA, '{MongoDB => Cassandra}')} of {colorify(Fore.YELLOW, f'`{schema_name}`')} started:")
+            f"Migration {colorify(Fore.MAGENTA, '{MongoDB => Cassandra}')} of {colorify(Fore.YELLOW, f'`{schema_name}`')} started:"
+        )
         print(
-            " " * 5 + f"Generated schema name => {colorify(Fore.CYAN, f'`{cassandra.keyspace_name}`')}")
+            " " * 5
+            + f"Generated schema name => {colorify(Fore.CYAN, f'`{cassandra.keyspace_name}`')}"
+        )
 
         for collection_name in mongodb.get_collection_names():
             collection = mongodb.get_collection(collection_name)
             cassandra.insert_many(collection_name, collection)
             print(" " * 10 + colorify(Fore.GREEN, "√ " + collection_name))
 
-        print(
-            f"Migration {colorify(Fore.MAGENTA, '{MongoDB => Cassandra}')} finished!")
+        print(f"Migration {colorify(Fore.MAGENTA, '{MongoDB => Cassandra}')} finished!")
 
         del mongodb
         del cassandra
