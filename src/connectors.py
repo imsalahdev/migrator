@@ -204,9 +204,11 @@ class MongoConnector:
         @param {list} foreign_keys - A list of foreign keys names."""
 
         for (table_name, column_name, referenced_table_name, *_rest) in foreign_keys:
-            self.db[table_name].update_many(
-                {}, {"$rename": {column_name: f"{referenced_table_name}_id"}}
-            )
+            new_column_name = f"{referenced_table_name}_id"
+            if column_name != new_column_name:
+                self.db[table_name].update_many(
+                    {}, {"$rename": {column_name: new_column_name}}
+                )
 
     def remove_primary_keys(self, primary_keys: list) -> None:
         """This method removes all primary keys fields.
