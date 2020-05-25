@@ -4,6 +4,7 @@ from uuid import uuid4
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from cassandra import cluster
+from utils import sanitize_string
 
 
 class MySQLConnector:
@@ -295,7 +296,7 @@ class CassandraConnector:
         @param {string} keyspace_name - The keyspace name to create.
         @return {boolean} - Returns if keyspace's already existing."""
 
-        self.keyspace_name = keyspace_name.replace("-", "_")
+        self.keyspace_name = sanitize_string(keyspace_name)
         keyspace_names = self.session.execute(
             "SELECT keyspace_name FROM system_schema.keyspaces"
         )
@@ -306,7 +307,7 @@ class CassandraConnector:
         @param {dict} document - The document to fetch from.
         @return {dict} - Returns a dictionary of field names and their types."""
 
-        return {key.replace("_", ""): type(document[key]) for key in document.keys()}
+        return {sanitize_string(key): type(document[key]) for key in document.keys()}
 
     def create_table(self, collection_name: str, collection_types: dict) -> None:
         """This method creates a table.
@@ -345,9 +346,9 @@ class CassandraConnector:
         for document in collection:
             altered_document = {}
             for key in document.keys():
-                altered_document[key.replace("_", "")] = document[key]
+                altered_document[sanitize_string(key)] = document[key]
                 if type(document[key]) == ObjectId:
-                    altered_document[key.replace("_", "")] = str(document[key])
+                    altered_document[sanitize_string(key)] = str(document[key])
 
             altered_document_keys = altered_document.keys()
             column_names = ", ".join(altered_document_keys)
